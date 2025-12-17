@@ -1,0 +1,43 @@
+# Makefile.security - Shared security scanning targets
+# Include this file in service Makefiles: include ../sast-scanner/Makefile.security
+
+SHELL := /bin/bash
+.ONESHELL:
+.SHELLFLAGS := -ec
+SHARED_SCRIPTS_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))/scripts
+export SHARED_SCRIPTS_DIR
+
+.PHONY: check-security-tools scan security-full
+
+# Check if security tools are installed
+check-security-tools:
+	@echo "Checking security tools availability..."
+	@cd "$(SHARED_SCRIPTS_DIR)" && bash ./check_security_tools.sh
+
+# Run static analysis security scanning  
+scan:
+	@echo "Running static analysis security scan..."
+	SCRIPT="$(SHARED_SCRIPTS_DIR)/scan.sh"
+	bash "$$SCRIPT"
+
+# Run complete security suite (check tools, scan)
+security-full: check-security-tools scan
+	@echo ""
+	@echo "✓ Complete security scanning suite finished"
+	@echo "[[CLINE:DONE]] Security full suite"
+
+# Install security tools (for non-devcontainer environments)
+install-security-tools:
+	@echo "Installing security tools..."
+	@cd "$(SHARED_SCRIPTS_DIR)" && bash ./install_security_tools.sh
+
+# Help target
+help-security:
+	@echo "Security Scanning Targets (from sast-scanner):"
+	@echo "  check-security-tools    - Verify Semgrep is installed"
+	@echo "  scan                    - Run static analysis security scanning"
+	@echo "  security-full           - Run complete security suite"
+	@echo "  install-security-tools  - Install Semgrep (manual fallback)"
+	@echo ""
+	@echo "Configuration:"
+	@echo "  SHARED_SCRIPTS_DIR: $(SHARED_SCRIPTS_DIR)"

@@ -1,0 +1,65 @@
+# Example Makefile for sbs-* services
+# Copy this to your service and customize as needed
+
+SHELL := /bin/bash
+
+# Include shared security targets from sast-scanner
+include ../sast-scanner/Makefile.security
+
+# Service-specific variables
+SERVICE_NAME := sbs-example-service
+
+.PHONY: help check contracts health test scan release all
+
+# Default target
+all: check contracts health test scan
+
+# Help target
+help:
+	@echo "Available targets for $(SERVICE_NAME):"
+	@echo ""
+	@echo "Service Targets:"
+	@echo "  check         - Run linting and format checks"
+	@echo "  contracts     - Validate contracts and schemas"
+	@echo "  health        - Run health checks"
+	@echo "  test          - Run smoke tests"
+	@echo "  release       - Create release artifacts"
+	@echo "  all           - Run complete validation suite"
+	@echo ""
+	@$(MAKE) help-security
+
+# Linting and format checks
+check:
+	@echo "Running checks for $(SERVICE_NAME)..."
+	@# Add your linting commands here
+	@# Example: pylint src/ || black --check src/ || shellcheck scripts/*.sh
+
+# Validate contracts and schemas
+contracts:
+	@echo "Validating contracts..."
+	@bash scripts/validate_contracts.sh || true
+	@bash scripts/validate_schemas.sh || true
+
+# Health checks
+health:
+	@echo "Running health checks..."
+	@bash scripts/health.sh || true
+
+# Run tests
+test:
+	@echo "Running tests..."
+	@bash tests/smoke.sh || true
+
+# Note: scan targets are provided by ../sast-scanner/Makefile.security
+
+# Create release artifacts
+release:
+	@echo "Creating release artifacts..."
+	@bash scripts/release.sh || true
+
+# Clean generated artifacts
+clean:
+	@echo "Cleaning generated artifacts..."
+	@rm -rf dist/ build/ *.egg-info/
+	@find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+	@find . -type f -name "*.pyc" -delete 2>/dev/null || true

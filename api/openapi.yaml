@@ -1,0 +1,157 @@
+openapi: 3.0.3
+info:
+  title: SAST-Scanner API
+  description: |
+    API for the SAST-Scanner security automation suite.
+    This API provides endpoints for SAST (Static Application Security Testing) via Semgrep.
+  version: 1.0.0
+  contact:
+    name: SAST-Scanner Team
+    url: https://github.com/cldguard/sast-scanner
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development server
+
+tags:
+  - name: scan
+    description: Security scanning operations
+  - name: report
+    description: Reporting operations
+
+paths:
+  /scan/semgrep:
+    post:
+      tags:
+        - scan
+      summary: Run a Semgrep security scan
+      description: |
+        Initiates a new Semgrep security scan against a target.
+        The target must be running on a port ≥ 8500 per project requirements.
+      operationId: runSempgrepScan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SempgrepScanRequest'
+      responses:
+        '202':
+          description: Scan accepted and started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SempgrepScanResponse'
+        '400':
+          description: Invalid input parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /vulnerability/scan:
+    post:
+      tags:
+        - scan
+      summary: Run a vulnerability scan
+      description: |
+        Initiates a new vulnerability scan using Semgrep against a specified target.
+      operationId: runVulnerabilityScan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VulnerabilityScanRequest'
+      responses:
+        '202':
+          description: Scan accepted and started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VulnerabilityScanResponse'
+        '400':
+          description: Invalid input parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+                
+    VulnerabilityScanRequest:
+      type: object
+      required:
+        - target
+      properties:
+        target:
+          type: string
+          description: Target to scan (filesystem path or image name)
+          example: /app
+        targetType:
+          type: string
+          description: Type of target to scan
+          enum: [fs, image, repository]
+          default: fs
+        severity:
+          type: array
+          description: Severity levels to include in results
+          items:
+            type: string
+            enum: [CRITICAL, HIGH, MEDIUM, LOW, UNKNOWN]
+          default: [CRITICAL, HIGH]
+    
+    VulnerabilityScanResponse:
+      type: object
+      required:
+        - scanId
+        - status
+      properties:
+        scanId:
+          type: string
+          format: uuid
+          description: ID of the created vulnerability scan
+        status:
+          type: string
+          description: Initial status of the scan
+          enum: [queued, in_progress, completed, failed]
+          default: queued
+    
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          description: Additional error details
+
+  securitySchemes:
+    apiKey:
+      type: apiKey
+      name: X-API-Key
+      in: header
+      description: API key authentication
+
+security:
+  - apiKey: []
