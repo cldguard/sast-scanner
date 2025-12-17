@@ -23,7 +23,10 @@ docker --version
 docker info
 ```
 
-### 2. Run Your First Scan
+### 2. Review Integration Steps
+ ./docs/INTEGRATION.md
+
+### 3. Run Your First Scan
 
 **Windows (PowerShell):**
 ```powershell
@@ -35,7 +38,7 @@ docker info
 ./scripts/scan.sh /path/to/your/project
 ```
 
-### 3. View Results
+### 4. View Results
 
 Scan results are saved to `../sast-scan-output/<project-name>-<timestamp>/`:
 - `semgrep-results.json` - Machine-readable JSON format
