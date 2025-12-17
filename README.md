@@ -1,100 +1,245 @@
-# sast-scanner
+# SAST Scanner
 
-Shared infrastructure and tooling for the SmallBizSec platform.
+[![Security Scan](https://img.shields.io/badge/security-semgrep-blue)](https://semgrep.dev)
+[![Docker](https://img.shields.io/badge/docker-required-blue)](https://docker.com)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-## Overview
+A comprehensive Static Application Security Testing (SAST) scanner powered by Semgrep, designed for automated security vulnerability detection in your codebase.
 
-This module provides centralized security static analysis tools, devcontainer configurations, and reusable scripts for all sbs-* services.
+## 🚀 Features
 
-## Components
+- **Docker-based Execution** - Consistent scanning across all environments
+- **Multi-format Output** - JSON, SARIF, and HTML reports
+- **Health Checks** - Pre/post-scan Docker verification
+- **Cross-platform** - Windows (PowerShell) and Linux/Mac (Bash) support
+- **CI/CD Ready** - Exit codes and sentinels for automation
+- **Standardized Output** - Organized results in `../sast-scan-output/<repo>-<timestamp>/`
 
-### Security Scanning
+## 📋 Prerequisites
 
-The project implements a static analysis security pipeline:
+| Requirement | Version | Notes |
+|-------------|---------|-------|
+| Docker Desktop | Latest | **Required** - All scans run via Docker |
+| Python | 3.x | Optional - For HTML report generation |
+| PowerShell | 5.1+ | Windows scanning |
+| Bash | 4.0+ | Linux/Mac scanning |
 
-- **Semgrep**: Static Application Security Testing (SAST)
-  - Configured to fail builds on HIGH/CRITICAL findings
-  - Uses security-focused rulesets
-  - Can run in both native and Docker modes
-  - Runs on port 8501 for server mode
-  - Generates detailed HTML and JSON reports
+## 🏃 Quick Start
 
-```
-┌─────────────────────────────────────┐
-│                                     │
-│  Static Application Security Testing │
-│  (Semgrep)                          │
-│                                     │
-└─────────────────────────────────────┘
-                │
-                v
-┌─────────────────────────────────────────────────┐
-│                                                 │
-│           Security Gate (CI/CD)                 │
-│    Fail build on HIGH/CRITICAL findings         │
-│                                                 │
-└─────────────────────────────────────────────────┘
+### 1. Clone and Navigate
+```bash
+git clone https://github.com/cldguard/sast-scanner-dev.git
+cd sast-scanner-dev
 ```
 
-For more details on the security implementation, see [SECURITY.md](./SECURITY.md).
+### 2. Verify Docker
+```bash
+docker --version
+docker info
+```
 
-### Shared Resources
-- `.devcontainer/`: Base devcontainer configuration with pre-installed security tools
-- `scripts/`: Reusable scripts for security scanning and tool installation
-- `phases/`: Standard phase documentation templates
-- `Makefile.security`: Makefile fragment for security targets
+### 3. Run a Scan
 
-## Usage
+**Windows:**
+```powershell
+.\scripts\win-scan.ps1 -Path "C:\path\to\your\project"
+```
 
-### In Service Projects
+**Linux/Mac:**
+```bash
+./scripts/scan.sh /path/to/your/project
+```
 
-Include the shared Makefile in your service's Makefile:
+### 4. View Results
+Results are saved to `../sast-scan-output/<project>-<timestamp>/`:
+```
+sast-scan-output/
+└── myproject-20251216234329/
+    ├── semgrep-results.json    # Machine-readable
+    ├── semgrep-results.sarif   # IDE integration (VS Code, GitHub)
+    └── semgrep-results.html    # Human-readable report
+```
+
+## 📖 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [**Getting Started**](GETTING_STARTED.md) | First-time setup and quick start guide |
+| [**Integration Guide**](docs/INTEGRATION.md) | CI/CD integration, Makefile examples |
+| [**Security Policy**](SECURITY.md) | Vulnerability reporting, security practices |
+| [**API Reference**](api/openapi.yaml) | OpenAPI specification for automation |
+| [**Changelog**](CHANGELOG.md) | Version history and updates |
+
+## 🔧 Scan Options
+
+### Command Line Arguments
+
+| Option | Description | Example |
+|--------|-------------|---------|
+| `--std-output` | Use standardized output directory | `./scripts/scan.sh --std-output` |
+| `--output-dir` | Custom output directory | `./scripts/scan.sh --output-dir ./results` |
+| `--json` | JSON output format | `./scripts/scan.sh --json` |
+| `--output` | Custom output filename | `./scripts/scan.sh --output scan.json` |
+
+### PowerShell Parameters
+
+```powershell
+.\scripts\win-scan.ps1 -Path "C:\project" -Severity "HIGH,CRITICAL"
+```
+
+## 🏥 Health Checks
+
+The scanner performs automatic health verification:
+
+```
+=== Docker Health Check ===
+Checking Docker availability...
+  Docker Server version: 28.5.1      ✓
+Verifying Docker daemon is responsive...
+  Docker daemon is running: v28.5.1  ✓
+Checking Semgrep image availability...
+  Semgrep image found: returntocorp/semgrep:latest ✓
+=== Health Check PASSED ===
+```
+
+## 📊 Understanding Results
+
+### Exit Codes
+
+| Code | Meaning | Action |
+|------|---------|--------|
+| `0` | No security issues | ✅ Safe to proceed |
+| `1` | Security issues found | ⚠️ Review and remediate |
+
+### Severity Levels
+
+| Level | Description | SLA |
+|-------|-------------|-----|
+| **CRITICAL** | Exploitable vulnerability | Fix immediately |
+| **HIGH** | Significant security risk | Fix before release |
+| **MEDIUM** | Potential security concern | Plan remediation |
+| **LOW** | Minor security consideration | Fix when convenient |
+
+### Completion Sentinels
+
+For CI/CD integration, scripts emit:
+- `[[CLINE:DONE]] Security scan` - Scan passed
+- `[[CLINE:FAIL]] Security scan` - Issues detected
+
+## 🗂️ Project Structure
+
+```
+sast-scanner-dev/
+├── scripts/                    # Scanning scripts
+│   ├── scan.sh                 # Bash scanner (Docker-only)
+│   ├── win-scan.ps1            # PowerShell scanner
+│   ├── create_output_dir.sh    # Output directory helper
+│   ├── Create-OutputDir.ps1    # PowerShell output helper
+│   └── vulns-to-html.py        # HTML report generator
+├── docs/                       # Documentation
+│   └── INTEGRATION.md          # CI/CD integration
+├── api/                        # API specifications
+│   └── openapi.yaml            # OpenAPI 3.0 spec
+├── examples/                   # Example configurations
+│   └── Makefile.example        # Makefile integration
+├── phases/                     # Development phases
+├── rules/                      # Project rules and policies
+├── release/                    # Release artifacts
+├── Makefile.security           # Security make targets
+├── SECURITY.md                 # Security policy
+├── CHANGELOG.md                # Version history
+├── GETTING_STARTED.md          # Quick start guide
+└── README.md                   # This file
+```
+
+## 🔌 Integration
+
+### Makefile
+
+Include in your project's Makefile:
 
 ```makefile
-include ../sast-scanner/Makefile.security
+include path/to/sast-scanner/Makefile.security
+
+# Run security scan
+scan:
+	@$(MAKE) -f Makefile.security security-scan
 ```
 
-Extend the base devcontainer configuration:
+### GitHub Actions
 
-```json
-{
-  "name": "your-service",
-  "extends": "../../sast-scanner/.devcontainer/devcontainer-base.json"
-}
+```yaml
+- name: Run SAST Scan
+  run: |
+    ./scripts/scan.sh --std-output ${{ github.workspace }}
+  
+- name: Upload SARIF
+  uses: github/codeql-action/upload-sarif@v2
+  with:
+    sarif_file: ../sast-scan-output/*/semgrep-results.sarif
 ```
 
-### Running Security Scans
+### GitLab CI
 
-```bash
-# Check if tools are installed
-make check-security-tools
-
-# Run static analysis security scan
-make scan
-
-# Run static analysis security scan with JSON output
-bash scripts/scan.sh --json
-
-# Run static analysis security scan with standard output directory
-bash scripts/scan.sh --std-output
+```yaml
+sast:
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - ./scripts/scan.sh --std-output .
+  artifacts:
+    reports:
+      sast: sast-scan-output/*/semgrep-results.sarif
 ```
 
-The scan results will be stored in the `./sast-scan-output/<repository>-<timestamp>/` directory:
-- `semgrep-results.json`: JSON file containing detailed scan results
-- `semgrep-results.html`: HTML report for easy viewing of results
+## 🐳 Docker-Only Policy
 
-## Installation
+> **Important**: This project mandates Docker for all Semgrep execution.
 
-Security tools are automatically installed via devcontainer features. For manual installation:
 
-```bash
-bash scripts/install_security_tools.sh
+This ensures consistent behavior and version parity across all environments.
+
+## 🆘 Troubleshooting
+
+### Docker Not Running
+```
+ERROR: Docker is not available
+```
+**Solution**: Start Docker Desktop → Verify with `docker info`
+
+### Permission Denied
+```
+Error writing HTML report: Permission denied
+```
+**Solution**: Check write permissions on output directory
+
+### Slow First Scan
+First scan pulls the Semgrep image (~400MB). Subsequent scans use cache.
+
+### Windows Path Issues
+Use PowerShell script for Windows paths:
+```powershell
+.\scripts\win-scan.ps1 -Path "D:\Projects\myapp"
 ```
 
-## Documentation
+## 📝 Version
 
-See `GETTING_STARTED.md` for documentation.
+**Current Version**: See [VERSION](release/sast-scanner/VERSION)
 
-## Version
+## 📜 License
 
-1.0.0
+MIT License - See [LICENSE](LICENSE) for details.
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Run security scan on your changes
+4. Submit a pull request
+
+## 🔗 Links
+
+- [Semgrep Documentation](https://semgrep.dev/docs)
+- [SARIF Specification](https://sarifweb.azurewebsites.net/)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop)
