@@ -129,7 +129,7 @@ For CI/CD integration, scripts emit:
 ## 🗂️ Project Structure
 
 ```
-sast-scanner-dev/
+sast-scanner/
 ├── scripts/                    # Scanning scripts
 │   ├── scan.sh                 # Bash scanner (Docker-only)
 │   ├── win-scan.ps1            # PowerShell scanner
@@ -142,9 +142,6 @@ sast-scanner-dev/
 │   └── openapi.yaml            # OpenAPI 3.0 spec
 ├── examples/                   # Example configurations
 │   └── Makefile.example        # Makefile integration
-├── phases/                     # Development phases
-├── rules/                      # Project rules and policies
-├── release/                    # Release artifacts
 ├── Makefile.security           # Security make targets
 ├── SECURITY.md                 # Security policy
 ├── CHANGELOG.md                # Version history
