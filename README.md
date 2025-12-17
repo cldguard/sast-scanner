@@ -93,7 +93,7 @@ bash scripts/install_security_tools.sh
 
 ## Documentation
 
-See `phases/` directory for detailed phase-by-phase documentation.
+See `GETTING_STARTED.md` for documentation.
 
 ## Version
 
